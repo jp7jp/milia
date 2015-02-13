@@ -15,22 +15,30 @@ module Milia
 # ------------------------------------------------------------------------
       def acts_as_tenant()
         belongs_to  :tenant
-        validates_presence_of :tenant_id
+#        validates_presence_of :tenant_id
 
-        default_scope lambda { where( "#{table_name}.tenant_id = ?", Thread.current[:tenant_id] ) }
+        default_scope lambda {
+          if Thread.current[:tenant_id] && Thread.current[:tenant_id] != 0
+            where( "#{table_name}.tenant_id = ?", Thread.current[:tenant_id] ) 
+          else
+            where( "#{table_name}.tenant_id IS NULL" ) 
+          end
+        }
 
       # ..........................callback enforcers............................
         before_validation(:on => :create) do |obj|   # force tenant_id to be correct for current_user
-          obj.tenant_id = Thread.current[:tenant_id]
+          if Thread.current[:tenant_id] && Thread.current[:tenant_id] != 0 
+            obj.tenant_id = Thread.current[:tenant_id]
+          end
           true  #  ok to proceed
         end
 
       # ..........................callback enforcers............................
-        before_save do |obj|   # force tenant_id to be correct for current_user
-          # raise exception if updates attempted on wrong data
-          raise ::Milia::Control::InvalidTenantAccess unless obj.tenant_id == Thread.current[:tenant_id]
-          true  #  ok to proceed
-        end
+        # before_save do |obj|   # force tenant_id to be correct for current_user
+        #   # raise exception if updates attempted on wrong data
+        #   raise ::Milia::Control::InvalidTenantAccess unless obj.tenant_id == Thread.current[:tenant_id]
+        #   true  #  ok to proceed
+        # end
 
       # ..........................callback enforcers............................
         # no longer needed because before_save invoked prior to before_update
@@ -41,10 +49,10 @@ module Milia
 #         end
 
       # ..........................callback enforcers............................
-        before_destroy do |obj|   # force tenant_id to be correct for current_user
-          raise ::Milia::Control::InvalidTenantAccess unless obj.tenant_id == Thread.current[:tenant_id]
-          true  #  ok to proceed
-        end
+        # before_destroy do |obj|   # force tenant_id to be correct for current_user
+        #   raise ::Milia::Control::InvalidTenantAccess unless obj.tenant_id == Thread.current[:tenant_id]
+        #   true  #  ok to proceed
+        # end
 
       end
 
@@ -121,7 +129,7 @@ module Milia
 # ------------------------------------------------------------------------
 # ------------------------------------------------------------------------
   def acts_as_universal_and_determines_tenant()
-    has_and_belongs_to_many :users
+    has_many :users
 
     acts_as_universal()
     
