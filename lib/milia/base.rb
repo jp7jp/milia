@@ -18,7 +18,7 @@ module Milia
 #        validates_presence_of :tenant_id
 
         default_scope lambda {
-          if Thread.current[:tenant_id] && Thread.current[:tenant_id] != 0 && (Tenant.current.customized || table_name != 'event_row_types')
+          if Thread.current[:tenant_id] && Thread.current[:tenant_id] != 0 && (table_name != 'event_row_types' || Thread.current[:tenant_customized])
             where( "#{table_name}.tenant_id = ?", Thread.current[:tenant_id] ) 
           else
             where( "#{table_name}.tenant_id IS NULL" ) 
@@ -27,7 +27,7 @@ module Milia
 
       # ..........................callback enforcers............................
         before_validation(:on => :create) do |obj|   # force tenant_id to be correct for current_user
-          if Thread.current[:tenant_id] && Thread.current[:tenant_id] != 0 && (Tenant.current.customized || self.class.table_name != 'event_row_types')
+          if Thread.current[:tenant_id] && Thread.current[:tenant_id] != 0 && (self.class.table_name != 'event_row_types' || Thread.current[:tenant_customized])
             obj.tenant_id = Thread.current[:tenant_id]
           end
           true  #  ok to proceed
@@ -182,6 +182,11 @@ module Milia
     
     old_id = ( Thread.current[:tenant_id].nil? ? '%' : Thread.current[:tenant_id] )
     Thread.current[:tenant_id] = tenant_id
+    if tenant_id > 0
+      Thread.current[:tenant_customized] = Tenant.find(tenant_id).customized
+    else
+      Thread.current[:tenant_customized] = false
+    end
     logger.debug("MILIA >>>>> [Tenant#change_tenant] new: #{tenant_id}\told:#{old_id}") unless logger.nil?
 
   end
