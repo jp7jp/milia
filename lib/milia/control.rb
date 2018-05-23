@@ -99,25 +99,25 @@ module Milia
 # -- sets current tenant
 # ------------------------------------------------------------------------------
   def authenticate_tenant!()
-    unless authenticate_user!
-      email = ( params.nil? || params[:user].nil?  ?  "<email missing>"  : params[:user][:email] )
-      flash[:error] = "cannot sign in as #{email}; check email/password"
-      logger.info("MILIA >>>>> [failed auth user] ") unless logger.nil?
-      return false  # abort the before_filter chain
-    end
+    # unless authenticate_user!
+    #   email = ( params.nil? || params[:user].nil?  ?  "<email missing>"  : params[:user][:email] )
+    #   flash[:error] = "cannot sign in as #{email}; check email/password"
+    #   logger.info("MILIA >>>>> [failed auth user] ") unless logger.nil?
+    #   return false  # abort the before_filter chain
+    # end
 
-    trace_tenanting( "authenticate_tenant!" )
+    # trace_tenanting( "authenticate_tenant!" )
 
-    # user_signed_in? == true also means current_user returns valid user
-    raise SecurityError,"*** invalid user_signed_in  ***" unless user_signed_in?
+    # # user_signed_in? == true also means current_user returns valid user
+    # raise SecurityError,"*** invalid user_signed_in  ***" unless user_signed_in?
 
-    set_current_tenant   # relies on current_user being non-nil
+    # set_current_tenant   # relies on current_user being non-nil
 
-      # successful tenant authentication; do any callback
-    if self.respond_to?( :callback_authenticate_tenant, true )
-      logger.debug("MILIA >>>>> [auth_tenant callback]")
-      self.send( :callback_authenticate_tenant )
-    end
+    #   # successful tenant authentication; do any callback
+    # if self.respond_to?( :callback_authenticate_tenant, true )
+    #   logger.debug("MILIA >>>>> [auth_tenant callback]")
+    #   self.send( :callback_authenticate_tenant )
+    # end
 
     true  # allows before filter chain to continue
   end
